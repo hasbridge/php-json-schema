@@ -1,0 +1,64 @@
+{
+    "description" : "Car",
+    "type" : "object",
+    "properties" : {
+        "manufacturer" : {
+            "type" : "string",
+            "required" : true
+        },
+        "model" : {
+            "type" : "string",
+            "required" : true
+        },
+        "year" : {
+            "type" : "integer",
+            "required" : true,
+            "minimum" : 2011,
+            "maximum" : 2012
+        },
+        "color" : {
+            "type" : "string",
+            "required" : true
+        },
+        "alloys" : {
+            "type" : "boolean",
+            "required" : false
+        },
+        "features" : {
+            "type" : "array",
+            "required" : true,
+            "minItems" : 2,
+            "maxItems" : 3,
+            "uniqueItems" : true
+        },
+        "id" : {
+            "type" : "string",
+            "required" : true,
+            "pattern" : "/[A-Z]/",
+            "minLength" : 4,
+            "maxLength" : 5
+        },
+        "engine" : {
+            "type" : "object",
+            "required" : true,
+            "properties" : {
+                "cylinders" : {
+                    "type" : "integer",
+                    "required" : "true"
+                },
+                "displacement" : {
+                    "type" : "integer",
+                    "required" : "true"
+                },
+                "horsepower" : {
+                    "type" : "number",
+                    "required" : true
+                },
+                "torque" : {
+                    "type" : "number",
+                    "required" : true
+                }
+            }
+        }
+    }
+}

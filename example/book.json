@@ -1,0 +1,32 @@
+{
+    "description" : "Book",
+    "type" : "object",
+    "properties" : {
+        "name" : {
+            "title" : "Book name",
+            "type" : "string",
+            "required" : true
+        },
+        "author" : {
+            "title" : "Book author name",
+            "type" : "string",
+            "required" : true
+        },
+        "isbn" : {
+            "title" : "Book ISBN",
+            "type" : "string",
+            "required" : true
+        },
+        "publisher" : {
+            "title" : "Book publisher",
+            "type" : "string",
+            "required" : true
+        },
+        "price" : {
+            "title" : "Book selling price",
+            "type" : "number",
+            "required" : true
+        }
+    },
+    "additionalProperties" : false
+}
