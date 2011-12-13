@@ -1,0 +1,64 @@
+{
+    "description" : "Test Schema",
+    "type" : "object",
+    "additionalProperties" : false,
+    "properties" : {
+        "stringProp" : {
+            "type" : "string",
+            "minLength" : 2,
+            "maxLength" : 3,
+            "required" : true,
+            "pattern" : "/[A-Za-z]/"
+        },
+        "arrayProp" : {
+            "type" : "array",
+            "minItems" : 1,
+            "maxItems" : 2,
+            "uniqueItems" : true,
+            "required" : true,
+            "enum" : ["foo", "bar", "baz"]
+        },
+        "numberProp" : {
+            "type" : "number",
+            "minimum" : 1,
+            "maximum" : 2,
+            "required" : true
+        },
+        "integerProp" : {
+            "type" : "integer",
+            "minimum" : 1,
+            "maximum" : 2,
+            "required" : true
+        },
+        "booleanProp" : {
+            "type" : "boolean",
+            "required" : true
+        },
+        "nullProp" : {
+            "type" : "null",
+            "required" : true
+        },
+        "anyProp" : {
+            "type" : "any",
+            "required" : true
+        },
+        "objectProp" : {
+            "type" : "object",
+            "required" : true,
+            "additionalProperties" : false,
+            "properties" : {
+                "foo" : {
+                    "type" : "string",
+                    "required" : true
+                }
+            }
+        },
+        "multiProp" : {
+            "type" : ["string", "integer"],
+            "required" : true
+        },
+        "customProp" : {
+            "type" : "myObject"
+        }
+    }
+}

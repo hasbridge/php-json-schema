@@ -13,6 +13,8 @@ class JsonSchemaException extends Exception {};
  */
 class JsonValidator
 {
+    protected $schemaDefinition;
+    
     /**
      * @var stdClass
      */
@@ -35,7 +37,7 @@ class JsonValidator
             throw new JsonSchemaException('Unable to parse JSON data - syntax error?');
         }
         
-        // Validate schema itself
+        // @TODO - validate schema itself
     }
     
     /**
@@ -53,16 +55,6 @@ class JsonValidator
         // Validate root type
         $this->validateType($entity, $this->schema, $entityName);
         
-        /*
-        // Validate additional properties
-        if (isset($this->schema->additionalProperties) && !$this->schema->additionalProperties) {
-            $extra = array_diff(array_keys((array)$jsonObject), array_keys((array)$this->schema->properties));
-            if (count($extra)) {
-                throw new JsonValidationException(sprintf('Additional properties [%s] not allowed for property [%s]', implode(',', $extra), $objectName));
-            }
-        }
-         */
-        
         return $this;
     }
     
@@ -77,8 +69,11 @@ class JsonValidator
      */
     protected function validateProperties($entity, $schema, $entityName)
     {
+        $properties = get_object_vars($entity);
+        
+        // Check defined properties
         foreach($schema->properties as $propertyName => $property) {
-            if (isset($entity->{$propertyName})) {
+            if (array_key_exists($propertyName, $properties)) {
                 // Check type
                 $path = $entityName . '.' . $propertyName;
                 $this->validateType($entity->{$propertyName}, $property, $path);
@@ -87,6 +82,14 @@ class JsonValidator
                 if (isset($property->required) && $property->required) {
                     throw new JsonValidationException(sprintf('Missing required property [%s] for [%s]', $propertyName, $entityName));
                 }
+            }
+        }
+        
+        // Check additional properties
+        if (isset($schema->additionalProperties) && !$schema->additionalProperties) {
+            $extra = array_diff(array_keys((array)$entity), array_keys((array)$schema->properties));
+            if (count($extra)) {
+                throw new JsonValidationException(sprintf('Additional properties [%s] not allowed for property [%s]', implode(',', $extra), $entityName));
             }
         }
         
@@ -104,24 +107,72 @@ class JsonValidator
      */
     protected function validateType($entity, $schema, $entityName)
     {
-        if ($schema->type == 'object') {
-            $this->checkTypeObject($entity, $schema, $entityName);
-        } else if ($schema->type == 'number') {
-            $this->checkTypeNumber($entity, $schema, $entityName);
-        } else if ($schema->type == 'integer') {
-            $this->checkTypeInteger($entity, $schema, $entityName);
-        } else if ($schema->type == 'boolean') {
-            $this->checkTypeBoolean($entity, $schema, $entityName);
-        } else if ($schema->type == 'string') {
-            $this->checkTypeString($entity, $schema, $entityName);
-        } else if ($schema->type == 'array') {
-            $this->checkTypeArray($entity, $schema, $entityName);
-        } else if ($schema->type == 'null') {
-            $this->checkTypeNull($entity, $schema, $entityName);
+        $types = $schema->type;
+        if (!is_array($types)) {
+            $types = array($types);
+        }
+        
+        $valid = false;
+        
+        foreach($types as $type) {
+            switch($type) {
+                case 'object':
+                    if (is_object($entity)) {
+                        $this->checkTypeObject($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                case 'string':
+                    if (is_string($entity)) {
+                        $this->checkTypeString($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                case 'array':
+                    if (is_array($entity)) {
+                        $this->checkTypeArray($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                case 'number':
+                    if (is_numeric($entity)) {
+                        $this->checkTypeNumber($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                case 'integer':
+                    if (is_int($entity)) {
+                        $this->checkTypeInteger($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                case 'boolean':
+                    if (is_bool($entity)) {
+                        $this->checkTypeBoolean($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                case 'null':
+                    if (is_null($entity)) {
+                        $this->checkTypeNull($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                default:
+                case 'any':
+                    // Do nothing
+                    $valid = true;
+                    break;
+            }
+        }
+        
+        if (!$valid) {
+            throw new JsonValidationException(sprintf('Property [%s] must be one of the following types: [%s]', $entityName, implode(', ', $types)));
         }
         
         return $this;
     }
+    
     
     /**
      * Check object type
@@ -134,11 +185,7 @@ class JsonValidator
      */
     protected function checkTypeObject($entity, $schema, $entityName) 
     {
-        if (!is_object($entity)) {
-            throw new JsonValidationException(sprintf('Expected object for [%s]', $entityName));
-        } else {
-            $this->validateProperties($entity, $schema, $entityName);
-        }
+        $this->validateProperties($entity, $schema, $entityName);
         
         return $this;
     }
@@ -154,10 +201,6 @@ class JsonValidator
      */
     protected function checkTypeNumber($entity, $schema, $entityName)
     {
-        if (!is_numeric($entity)) {
-            throw new JsonValidationException(sprintf('Expected number for [%s]', $entityName));
-        }
-        
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
         
@@ -175,10 +218,6 @@ class JsonValidator
      */
     protected function checkTypeInteger($entity, $schema, $entityName)
     {
-        if (!is_int($entity)) {
-            throw new JsonValidationException(sprintf('Expected integer for [%s]', $entityName));
-        }
-        
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
         
@@ -196,10 +235,6 @@ class JsonValidator
      */
     protected function checkTypeBoolean($entity, $schema, $entityName)
     {
-        if (!is_bool($entity)) {
-            throw new JsonValidationException(sprintf('Expected boolean for [%s]', $entityName));
-        }
-        
         return $this;
     }
     
@@ -214,13 +249,9 @@ class JsonValidator
      */
     protected function checkTypeString($entity, $schema, $entityName)
     {
-        if (!is_string($entity)) {
-            throw new JsonValidationException(sprintf('Expected string for [%s]', $entityName));
-        } else {
-            $this->checkPattern($entity, $schema, $entityName);
-            $this->checkMinLength($entity, $schema, $entityName);
-            $this->checkMaxLength($entity, $schema, $entityName);
-        }
+        $this->checkPattern($entity, $schema, $entityName);
+        $this->checkMinLength($entity, $schema, $entityName);
+        $this->checkMaxLength($entity, $schema, $entityName);
         
         return $this;
     }
@@ -236,13 +267,10 @@ class JsonValidator
      */
     protected function checkTypeArray($entity, $schema, $entityName)
     {
-        if (!is_array($entity)) {
-            throw new JsonValidationException(sprintf('Expected array for [%s]', $entityName));
-        } else {
-            $this->checkMinItems($entity, $schema, $entityName);
-            $this->checkMaxItems($entity, $schema, $entityName);
-            $this->checkUniqueItems($entity, $schema, $entityName);
-        }
+        $this->checkMinItems($entity, $schema, $entityName);
+        $this->checkMaxItems($entity, $schema, $entityName);
+        $this->checkUniqueItems($entity, $schema, $entityName);
+        $this->checkEnum($entity, $schema, $entityName);
         
         return $this;
     }
@@ -258,13 +286,18 @@ class JsonValidator
      */
     protected function checkTypeNull($entity, $schema, $entityName)
     {
-        if (!is_null($entity)) {
-            throw new JsonValidationException(sprintf('Expected null for [%s]', $entityName));
-        }
-        
         return $this;
     }
     
+    /**
+     * Check minimum value
+     * 
+     * @param int|float $entity
+     * @param object $schema
+     * @param string $entityName 
+     * 
+     * @return JsonValidator
+     */
     protected function checkMinimum($entity, $schema, $entityName)
     {
         if (isset($schema->minimum) && $schema->minimum) {
@@ -272,8 +305,19 @@ class JsonValidator
                 throw new JsonValidationException(sprintf('Invalid value for [%s], minimum is [%s]', $entityName, $schema->minimum));
             }
         }
+        
+        return $this;
     }
     
+    /**
+     * Check maximum value
+     * 
+     * @param int|float $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
     protected function checkMaximum($entity, $schema, $entityName)
     {
         if (isset($schema->maximum) && $schema->maximum) {
@@ -281,58 +325,137 @@ class JsonValidator
                 throw new JsonValidationException(sprintf('Invalid value for [%s], maximum is [%s]', $entityName, $schema->maximum));
             }
         }
+        
+        return $this;
     }
     
-    public function checkPattern($entity, $schema, $entityName)
+    /**
+     * Check value against regex pattern
+     * 
+     * @param string $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
+    protected function checkPattern($entity, $schema, $entityName)
     {
         if (isset($schema->pattern) && $schema->pattern) {
             if (!preg_match($schema->pattern, $entity)) {
                 throw new JsonValidationException(sprintf('String does not match pattern for [%s]', $entityName));
             }
         }
+        
+        return $this;
     }
     
-    public function checkMinLength($entity, $schema, $entityName)
+    /**
+     * Check string minimum length
+     * 
+     * @param string $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
+    protected function checkMinLength($entity, $schema, $entityName)
     {
         if (isset($schema->minLength) && $schema->minLength) {
             if (strlen($entity) < $schema->minLength) {
-                throw new JsonValidationException(sprintf('String too short for [%s], minimum length is [%s]', $entityName, strlen($entity)));
+                throw new JsonValidationException(sprintf('String too short for [%s], minimum length is [%s]', $entityName, $schema->minLength));
             }
         }
+        
+        return $this;
     }
     
-    public function checkMaxLength($entity, $schema, $entityName)
+    /**
+     * Check string maximum length
+     * 
+     * @param string $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
+    protected function checkMaxLength($entity, $schema, $entityName)
     {
         if (isset($schema->maxLength) && $schema->maxLength) {
             if (strlen($entity) > $schema->maxLength) {
                 throw new JsonValidationException(sprintf('String too long for [%s], maximum length is [%s]', $entityName, $schema->maxLength));
             }
         }
+        
+        return $this;
     }
     
-    public function checkMinItems($entity, $schema, $entityName)
+    /**
+     * Check array minimum items
+     * 
+     * @param array $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
+    protected function checkMinItems($entity, $schema, $entityName)
     {
         if (isset($schema->minItems) && $schema->minItems) {
             if (count($entity) < $schema->minItems) {
                 throw new JsonValidationException(sprintf('Not enough array items for [%s], minimum is [%s]', $entityName, $schema->minItems));
             }
         }
+        
+        return $this;
     }
     
-    public function checkMaxItems($entity, $schema, $entityName)
+    /**
+     * Check array maximum items
+     * 
+     * @param array $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
+    protected function checkMaxItems($entity, $schema, $entityName)
     {
         if (isset($schema->maxItems) && $schema->maxItems) {
             if (count($entity) > $schema->maxItems) {
                 throw new JsonValidationException(sprintf('Too many array items for [%s], maximum is [%s]', $entityName, $schema->maxItems));
             }
         }
+        
+        return $this;
     }
     
-    public function checkUniqueItems($entity, $schema, $entityName)
+    /**
+     * Check array unique items
+     * 
+     * @param array $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
+    protected function checkUniqueItems($entity, $schema, $entityName)
     {
         if (isset($schema->uniqueItems) && $schema->uniqueItems) {
             if (count(array_unique($entity)) != count($entity)) {
                 throw new JsonValidationException(sprintf('All items in array [%s] must be unique', $entityName));
+            }
+        }
+        
+        return $this;
+    }
+    
+    protected function checkEnum($entity, $schema, $entityName)
+    {
+        if (isset($schema->enum) && $schema->enum) {
+            foreach($entity as $val) {
+                if (!in_array($val, $schema->enum)) {
+                    throw new JsonValidationException(sprintf('Invalid value(s) for [%s], allowable values are [%s]', $entityName, implode(',', $schema->enum)));
+                }
             }
         }
     }
