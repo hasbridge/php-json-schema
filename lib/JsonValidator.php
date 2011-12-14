@@ -203,6 +203,7 @@ class JsonValidator
     {
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
+        $this->checkFormat($entity, $schema, $entityName);
         
         return $this;
     }
@@ -220,6 +221,7 @@ class JsonValidator
     {
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
+        $this->checkFormat($entity, $schema, $entityName);
         
         return $this;
     }
@@ -252,6 +254,7 @@ class JsonValidator
         $this->checkPattern($entity, $schema, $entityName);
         $this->checkMinLength($entity, $schema, $entityName);
         $this->checkMaxLength($entity, $schema, $entityName);
+        $this->checkFormat($entity, $schema, $entityName);
         
         return $this;
     }
@@ -449,6 +452,15 @@ class JsonValidator
         return $this;
     }
     
+    /**
+     * Check enum restriction
+     *  
+     * @param array $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
     protected function checkEnum($entity, $schema, $entityName)
     {
         if (isset($schema->enum) && $schema->enum) {
@@ -458,5 +470,74 @@ class JsonValidator
                 }
             }
         }
+        
+        return $this;
+    }
+    
+    /**
+     * Check format restriction
+     *  
+     * @param mixed $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return JsonValidator 
+     */
+    public function checkFormat($entity, $schema, $entityName)
+    {
+        if (isset($schema->format) && $schema->format) {
+            $valid = true;
+            switch($schema->format) {
+                case 'date-time':
+                    if (!preg_match('#^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$#', $entity)) {
+                        $valid = false;
+                    }
+                    break;
+                case 'date':
+                    if (!preg_match('#^\d{4}-\d{2}-\d{2}$#', $entity)) {
+                        $valid = false;
+                    }
+                    break;
+                case 'time':
+                    if (!preg_match('#^\d{2}:\d{2}:\d{2}$#', $entity)) {
+                        $valid = false;
+                    }
+                    break;
+                case 'utc-millisec':
+                    if ($entity < 0) {
+                        $valid = false;
+                    }
+                    break;
+                case 'color':
+                    if (!in_array($entity, array('maroon', 'red', 'orange', 
+                        'yellow', 'olive', 'green', 'purple', 'fuchsia', 'lime', 
+                        'teal', 'aqua', 'blue', 'navy', 'black', 'gray', 'silver', 'white'))) {
+                        if (!preg_match('#^\#[0-9A-F]{6}$#', $entity) && !preg_match('#^\#[0-9A-F]{3}$#', $entity)) {
+                            $valid = false;
+                        }
+                    }
+                    break;
+                case 'style':
+                    if (!preg_match('#(\.*?)[ ]?:[ ]?(.*?)#', $entity)) {
+                        $valid = false;
+                    }
+                    break;
+                case 'phone':
+                    if (!preg_match('#^[0-9\-+ \(\)]*$#', $entity)) {
+                        $valid = false;
+                    }
+                    break;
+                case 'uri':
+                    if (!preg_match('#^[A-Za-z0-9:/;,\-_\?&\.%\+\|\#=]*$#', $entity)) {
+                        $valid = false;
+                    }
+                    break;
+            }
+            
+            if (!$valid) {
+                throw new JsonValidationException(sprintf('Value for [%s] must match format [%s]', $entityName, $schema->format));
+            }
+        }
+        return $this;
     }
 }

@@ -59,6 +59,46 @@
         },
         "customProp" : {
             "type" : "myObject"
+        },
+        "dateTimeFormatProp" : {
+            "type" : "string",
+            "required" : true,
+            "format" : "date-time"
+        },
+        "dateFormatProp" : {
+            "type" : "string",
+            "required" : true,
+            "format" : "date"
+        },
+        "timeFormatProp" : {
+            "type" : "string",
+            "required" : true,
+            "format" : "time"
+        },
+        "utcMillisecFormatProp" : {
+            "type" : "integer",
+            "required" : true,
+            "format" : "utc-millisec"
+        },
+        "colorFormatProp" : {
+            "type" : "string",
+            "required" : true,
+            "format" : "color"
+        },
+        "styleFormatProp" : {
+            "type" : "string",
+            "required" : true,
+            "format" : "style"
+        },
+        "phoneFormatProp" : {
+            "type" : "string",
+            "required" : true,
+            "format" : "phone"
+        },
+        "uriFormatProp" : {
+            "type" : "string",
+            "required" : true,
+            "format" : "uri"
         }
     }
 }
