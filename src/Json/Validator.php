@@ -210,6 +210,7 @@ class Validator
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
+        $this->checkEnum($entity, $schema, $entityName);
         
         return $this;
     }
@@ -228,6 +229,7 @@ class Validator
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
+        $this->checkEnum($entity, $schema, $entityName);
         
         return $this;
     }
