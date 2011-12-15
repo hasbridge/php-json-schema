@@ -2,6 +2,9 @@ This library provides JSON schema validation using the schema found at http://js
 Note that it is not yet feature complete, but does support basic validation. The JSON schema
 draft can be found at http://tools.ietf.org/html/draft-zyp-json-schema-03
 
+## Requirements
+- PHP 5.3 or greater (requires namespace and closure support)
+
 ## Usage
 
     $someJson = '{"foo":"bar"}';
