@@ -109,6 +109,10 @@ class Validator
      */
     protected function validateType($entity, $schema, $entityName)
     {
+        if (!isset($schema->type)) {
+            throw new ValidationException(sprintf('No type given for [%s]', $entityName));
+        }
+        
         $types = $schema->type;
         if (!is_array($types)) {
             $types = array($types);
@@ -257,6 +261,7 @@ class Validator
         $this->checkMinLength($entity, $schema, $entityName);
         $this->checkMaxLength($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
+        $this->checkEnum($entity, $schema, $entityName);
         
         return $this;
     }
@@ -465,12 +470,26 @@ class Validator
      */
     protected function checkEnum($entity, $schema, $entityName)
     {
+        $valid = true;
         if (isset($schema->enum) && $schema->enum) {
-            foreach($entity as $val) {
-                if (!in_array($val, $schema->enum)) {
-                    throw new ValidationException(sprintf('Invalid value(s) for [%s], allowable values are [%s]', $entityName, implode(',', $schema->enum)));
+            if (!is_array($schema->enum)) {
+                throw new SchemaException(sprintf('Enum property must be an array for [%s]', $entityName));
+            }
+            if (is_array($entity)) {
+                foreach($entity as $val) {
+                    if (!in_array($val, $schema->enum)) {
+                        $valid = false;
+                    }
+                }
+            } else {
+                if (!in_array($entity, $schema->enum)) {
+                    $valid = false;
                 }
             }
+        }
+        
+        if (!$valid) {
+            throw new ValidationException(sprintf('Invalid value(s) for [%s], allowable values are [%s]', $entityName, implode(',', $schema->enum)));
         }
         
         return $this;

@@ -1,5 +1,5 @@
 <?php
 
-require '../lib/Json/Validator.php';
+require '../src/Json/Validator.php';
 
 define('TEST_DIR', realpath(__DIR__));
