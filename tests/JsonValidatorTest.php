@@ -1,5 +1,7 @@
 <?php
 
+use Json\Validator;
+
 /**
  * @covers JsonValidator
  */
@@ -45,7 +47,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     protected function getValidator()
     {
-        return new JsonValidator(TEST_DIR . '/mock/test-schema.json');
+        return new Validator(TEST_DIR . '/mock/test-schema.json');
     }
     
     /**
@@ -53,23 +55,23 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testConstruct()
     {
-        $v = new JsonValidator(TEST_DIR . '/mock/test-schema.json');
+        $v = new Validator(TEST_DIR . '/mock/test-schema.json');
     }
 
     /**
-     * @expectedException RuntimeException
+     * @expectedException Json\SchemaException
      */
     public function testSchemaNotFound()
     {
-        $v = new JsonValidator('asdf');
+        $v = new Validator('asdf');
     }
     
     /**
-     * @expectedException JsonSchemaException
+     * @expectedException Json\SchemaException
      */
     public function testInvalidSchema()
     {
-        $v = new JsonValidator(TEST_DIR . '/mock/invalid-schema.json');
+        $v = new Validator(TEST_DIR . '/mock/invalid-schema.json');
     }
     
     /**
@@ -96,7 +98,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testMissingRequired()
     {
@@ -107,7 +109,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidAdditionalProperties()
     {
@@ -118,7 +120,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidString()
     {
@@ -129,7 +131,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidNumber()
     {
@@ -140,7 +142,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidInteger()
     {
@@ -151,7 +153,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidBoolean()
     {
@@ -162,7 +164,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidArray()
     {
@@ -173,7 +175,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidNull()
     {
@@ -184,7 +186,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidObject()
     {
@@ -195,7 +197,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidMinimum()
     {
@@ -206,7 +208,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidMaximum()
     {
@@ -217,7 +219,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidPattern()
     {
@@ -228,7 +230,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidMinLength()
     {
@@ -239,7 +241,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidMaxLength()
     {
@@ -250,7 +252,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidMinItems()
     {
@@ -261,7 +263,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidMaxItems()
     {
@@ -272,7 +274,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidUniqueItems()
     {
@@ -283,7 +285,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidEnum()
     {
@@ -294,7 +296,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatDateTime()
     {
@@ -305,7 +307,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatDate()
     {
@@ -316,7 +318,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatTime()
     {
@@ -327,7 +329,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatUtcMillisec()
     {
@@ -338,7 +340,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatColor()
     {
@@ -349,7 +351,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatStyle()
     {
@@ -360,7 +362,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatPhone()
     {
@@ -371,7 +373,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @expectedException JsonValidationException
+     * @expectedException Json\ValidationException
      */
     public function testInvalidFormatUri()
     {
