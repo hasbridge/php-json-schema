@@ -73,28 +73,6 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * Test a valid object
-     */
-    public function testValidObject()
-    {
-        $o = $this->getTestObject();
-        $v = $this->getValidator();
-        $v->validate($o);
-    }
-    
-    /**
-     * Test multiple types for property
-     */
-    public function testMultiProp()
-    {
-        $o = $this->getTestObject();
-        $v = $this->getValidator();
-        
-        $o->multiProp = 1234;
-        $v->validate($o);
-    }
-    
-    /**
      * @expectedException Json\SchemaException
      */
     public function testMissingProperties()
@@ -123,13 +101,24 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     }
     
     /**
+     * Test multiple types for property
+     */
+    public function testMultiProp()
+    {
+        $v = $this->getValidator('multitype.json');
+        $v->validate("asdf");
+        $v->validate(1234);
+    }
+    
+    /**
      * @expectedException Json\ValidationException
      */
     public function testMissingRequired()
     {
-        $o = $this->getTestObject();
-        unset($o->stringProp);
-        $v = $this->getValidator();
+        $v = $this->getValidator('required.json');
+        $o = (object)array(
+            'baz' => 'bar'
+        );
         $v->validate($o);
     }
     
@@ -138,10 +127,17 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidAdditionalProperties()
     {
-        $o = $this->getTestObject();
-        $o->foo = 'bar';
-        $v = $this->getValidator();
+        $v = $this->getValidator('additionalProperties.json');
+        $o = (object)array(
+            'foo' => 'bar'
+        );
         $v->validate($o);
+    }
+    
+    public function testString()
+    {
+        $v = $this->getValidator('string.json');
+        $v->validate('foo');
     }
     
     /**
@@ -149,10 +145,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidString()
     {
-        $o = $this->getTestObject();
-        $o->stringProp = 1234;
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('string.json');
+        $v->validate(1234);
+    }
+    
+    public function testNumber()
+    {
+        $v = $this->getValidator('number.json');
+        $v->validate(1);
+        $v->validate(1.1);
     }
     
     /**
@@ -160,10 +161,14 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidNumber()
     {
-        $o = $this->getTestObject();
-        $o->numberProp = 'asdf';
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('number.json');
+        $v->validate('asdf');
+    }
+    
+    public function testInteger()
+    {
+        $v = $this->getValidator('integer.json');
+        $v->validate(1);
     }
     
     /**
@@ -171,10 +176,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidInteger()
     {
-        $o = $this->getTestObject();
-        $o->integerProp = 'asdf';
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('integer.json');
+        $v->validate('asdf');
+    }
+    
+    public function testBoolean()
+    {
+        $v = $this->getValidator('boolean.json');
+        $v->validate(true);
+        $v->validate(false);
     }
     
     /**
@@ -182,10 +192,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidBoolean()
     {
-        $o = $this->getTestObject();
-        $o->booleanProp = 'asdf';
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('boolean.json');
+        $v->validate('asdf');
+    }
+    
+    public function testArray()
+    {
+        $v = $this->getValidator('array.json');
+        $v->validate(array(1, 2, 3));
+        $v->validate(array());
     }
     
     /**
@@ -193,10 +208,14 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidArray()
     {
-        $o = $this->getTestObject();
-        $o->arrayProp = 'asdf';
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('array.json');
+        $v->validate('asdf');
+    }
+    
+    public function testNull()
+    {
+        $v = $this->getValidator('null.json');
+        $v->validate(null);
     }
     
     /**
@@ -204,9 +223,14 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidNull()
     {
-        $o = $this->getTestObject();
-        $o->nullProp = 'asdf';
-        $v = $this->getValidator();
+        $v = $this->getValidator('null.json');
+        $v->validate(1234);
+    }
+    
+    public function testObject()
+    {
+        $v = $this->getValidator('object.json');
+        $o = new stdClass();
         $v->validate($o);
     }
     
@@ -215,10 +239,14 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidObject()
     {
-        $o = $this->getTestObject();
-        $o->objectProp = 'asdf';
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('object.json');
+        $v->validate('asdf');
+    }
+    
+    public function testMinimum()
+    {
+        $v = $this->getValidator('minimum.json');
+        $v->validate(1);
     }
     
     /**
@@ -226,10 +254,14 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidMinimum()
     {
-        $o = $this->getTestObject();
-        $o->numberProp = 0;
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('minimum.json');
+        $v->validate(0);
+    }
+    
+    public function testMaximum()
+    {
+        $v = $this->getValidator('maximum.json');
+        $v->validate(1);
     }
     
     /**
@@ -237,10 +269,14 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidMaximum()
     {
-        $o = $this->getTestObject();
-        $o->numberProp = 100;
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('maximum.json');
+        $v->validate(3);
+    }
+    
+    public function testExclusiveMinimum()
+    {
+        $v = $this->getValidator('exclusiveMinimum.json');
+        $v->validate(2);
     }
     
     /**
@@ -248,10 +284,14 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidExclusiveMinimum()
     {
-        $o = $this->getTestObject();
-        $o->integerProp = 1;
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('exclusiveMinimum.json');
+        $v->validate(1);
+    }
+    
+    public function textExclusiveMaximum()
+    {
+        $v = $this->getValidator('exclusiveMaximum.json');
+        $v->validate(1);
     }
     
     /**
@@ -259,10 +299,8 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidExclusiveMaximum()
     {
-        $o = $this->getTestObject();
-        $o->integerProp = 3;
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('exclusiveMaximum.json');
+        $v->validate(2);
     }
     
     /**
