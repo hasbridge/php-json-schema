@@ -53,6 +53,7 @@ Not all definitions are yet supported, but here is a list of those which are:
 - disallow (all)
 
 The following definitions are not yet supported:
+
 - patternProperties
 - dependencies
 - extends
