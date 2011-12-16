@@ -29,9 +29,9 @@ type names.
 - null
 - any
 
-## Supported Restrictions
+## Supported Definitions
 
-Not all restrictions are yet supported, but here is a list of those which are:
+Not all definitions are yet supported, but here is a list of those which are:
 
 - properties (object)
 - additionalProperties (object)
@@ -51,3 +51,11 @@ Not all restrictions are yet supported, but here is a list of those which are:
 - uniqueItems (array)
 - items (array)
 - disallow (all)
+
+The following definitions are not yet supported:
+- patternProperties
+- dependencies
+- extends
+- id
+- $ref
+- $schema
