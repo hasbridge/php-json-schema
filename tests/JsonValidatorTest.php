@@ -3,7 +3,7 @@
 use Json\Validator;
 
 /**
- * @covers JsonValidator
+ * @covers Json\Validator
  */
 class JsonValidatorTest extends PHPUnit_Framework_TestCase
 {
@@ -18,7 +18,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         $o->stringProp = "AB";
         $o->arrayProp = array('foo', 'bar');
         $o->numberProp = 1.1;
-        $o->integerProp = 1;
+        $o->integerProp = 2;
         $o->booleanProp = false;
         $o->nullProp = null;
         $o->anyProp = 1;
@@ -50,9 +50,6 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         return new Validator(TEST_DIR . '/mock/test-schema.json');
     }
     
-    /**
-     * @covers JsonValidator::__construct
-     */
     public function testConstruct()
     {
         $v = new Validator(TEST_DIR . '/mock/test-schema.json');
@@ -71,7 +68,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSchema()
     {
-        $v = new Validator(TEST_DIR . '/mock/invalid-schema.json');
+        $v = new Validator(TEST_DIR . '/mock/empty-schema.json');
     }
     
     /**
@@ -94,6 +91,20 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         $v->validate($o);
         
         $o->multiProp = 1234;
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
+    public function testMissingType()
+    {
+        $v = new Validator(TEST_DIR . '/mock/missing-type.json');
+        
+        $o = (object)array(
+            'foo' => 'bar'
+        );
+        
         $v->validate($o);
     }
     
@@ -221,6 +232,28 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     /**
      * @expectedException Json\ValidationException
      */
+    public function testInvalidExclusiveMinimum()
+    {
+        $o = $this->getTestObject();
+        $o->integerProp = 1;
+        $v = $this->getValidator();
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
+    public function testInvalidExclusiveMaximum()
+    {
+        $o = $this->getTestObject();
+        $o->integerProp = 3;
+        $v = $this->getValidator();
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
     public function testInvalidPattern()
     {
         $o = $this->getTestObject();
@@ -287,11 +320,37 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     /**
      * @expectedException Json\ValidationException
      */
-    public function testInvalidEnum()
+    public function testInvalidArrayEnum()
     {
         $o = $this->getTestObject();
         $o->arrayProp = array('foo', 'blah');
         $v = $this->getValidator();
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
+    public function testInvalidStringEnum()
+    {
+        $v =  new Validator(TEST_DIR . '/mock/enum-string.json');
+        $o = (object)array(
+            'foo' => 'Bar2'
+        );
+        
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\SchemaException
+     */
+    public function testInvalidEnum()
+    {
+        $v =  new Validator(TEST_DIR . '/mock/invalid-enum.json');
+        $o = (object)array(
+            'foo' => 'Bar'
+        );
+        
         $v->validate($o);
     }
 

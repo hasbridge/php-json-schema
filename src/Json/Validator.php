@@ -209,6 +209,8 @@ class Validator
     {
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
+        $this->checkExclusiveMinimum($entity, $schema, $entityName);
+        $this->checkExclusiveMaximum($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
         
@@ -228,6 +230,8 @@ class Validator
     {
         $this->checkMinimum($entity, $schema, $entityName);
         $this->checkMaximum($entity, $schema, $entityName);
+        $this->checkExclusiveMinimum($entity, $schema, $entityName);
+        $this->checkExclusiveMaximum($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
         
@@ -338,6 +342,44 @@ class Validator
             }
         }
         
+        return $this;
+    }
+    
+    /**
+     * Check exlusive minimum requirement
+     * 
+     * @param int|float $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return Validator 
+     */
+    protected function checkExclusiveMinimum($entity, $schema, $entityName)
+    {
+        if (isset($schema->minimum) && isset($schema->exclusiveMinimum) && $schema->exclusiveMinimum) {
+            if ($entity == $schema->minimum) {
+                throw new ValidationException(sprintf('Invalid value for [%s], must be greater than [%s]', $entityName, $schema->minimum));
+            }
+        }
+        return $this;
+    }
+    
+    /**
+     * Check exclusive maximum requirement
+     * 
+     * @param int|float $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return Validator 
+     */
+    protected function checkExclusiveMaximum($entity, $schema, $entityName)
+    {
+        if (isset($schema->maximum) && isset($schema->exclusiveMaximum) && $schema->exclusiveMaximum) {
+            if ($entity == $schema->maximum) {
+                throw new ValidationException(sprintf('Invalid value for [%s], must be less than [%s]', $entityName, $schema->maximum));
+            }
+        }
         return $this;
     }
     
