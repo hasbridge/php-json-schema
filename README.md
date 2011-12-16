@@ -33,14 +33,18 @@ type names.
 
 Not all restrictions are yet supported, but here is a list of those which are:
 
-- additionalItems
-- required
+- additionalProperties (object)
+- required (all)
 - pattern (string)
 - minLength (string)
 - maxLength (string)
 - minimum (number, integer)
 - maximum (number, integer)
+- exclusiveMinimum (number, integer)
+- exclusiveMaximum (number, integer)
 - enum (array)
 - minItems (array)
 - maxItems (array)
 - uniqueItems (array)
+- items (array)
+- disallow (all)
