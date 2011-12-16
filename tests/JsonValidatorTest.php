@@ -43,16 +43,17 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     /**
      * Get validator object
      * 
+     * @param string $schemaFile
+     * 
      * @return JsonValidator 
      */
-    protected function getValidator()
+    protected function getValidator($schemaFile = null)
     {
-        return new Validator(TEST_DIR . '/mock/test-schema.json');
-    }
-    
-    public function testConstruct()
-    {
-        $v = new Validator(TEST_DIR . '/mock/test-schema.json');
+        if (!$schemaFile) {
+            $schemaFile = 'test.json';
+        }
+        
+        return new Validator(TEST_DIR . '/mock/' . $schemaFile);
     }
 
     /**
@@ -68,7 +69,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSchema()
     {
-        $v = new Validator(TEST_DIR . '/mock/empty-schema.json');
+        $v = new Validator(TEST_DIR . '/mock/empty.json');
     }
     
     /**
@@ -88,9 +89,22 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     {
         $o = $this->getTestObject();
         $v = $this->getValidator();
-        $v->validate($o);
         
         $o->multiProp = 1234;
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\SchemaException
+     */
+    public function testMissingProperties()
+    {
+        $v = $this->getValidator('missing-properties.json');
+        
+        $o = (object)array(
+            'foo' => 'bar'
+        );
+        
         $v->validate($o);
     }
     
@@ -439,6 +453,96 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         $o = $this->getTestObject();
         $o->uriFormatProp = '@*<>';
         $v = $this->getValidator();
+        $v->validate($o);
+    }
+    
+    public function testItemsSchema()
+    {
+        $v = $this->getValidator('items-schema.json');
+        $o = (object)array(
+            'foo' => array(
+                (object)array(
+                    'bar' => 'baz'
+                )
+            )
+        );
+        
+        $v->validate($o);
+    }
+    
+    public function testItemsArray()
+    {
+        $v = $this->getValidator('items-array.json');
+        $o = (object)array(
+            'foo' => array('foo', 1)
+        );
+        
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
+    public function testInvalidItemsArray()
+    {
+        $v = $this->getValidator('items-array.json');
+        $o = (object)array(
+            'foo' => array('foo', 1, true)
+        );
+        
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\SchemaException
+     */
+    public function testInvalidItemsValue()
+    {
+        $v = $this->getValidator('invalid-items.json');
+        $o = (object)array(
+            'foo' => array('blah')
+        );
+        
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
+    public function testInvalidItemsSchemaProperty()
+    {
+        $v = $this->getValidator('items-schema.json');
+        $o = (object)array(
+            'foo' => array(
+                (object)array(
+                    'bar' => 1
+                )
+            )
+        );
+        
+        $v->validate($o);
+    }
+    
+    public function testDisallow()
+    {
+        $v = $this->getValidator('disallow.json');
+        $o = (object)array(
+            'foo' => 'bar'
+        );
+        
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
+    public function testInvalidDisallow()
+    {
+        $v = $this->getValidator('disallow.json');
+        $o = (object)array(
+            'foo' => 123
+        );
+        
         $v->validate($o);
     }
 }

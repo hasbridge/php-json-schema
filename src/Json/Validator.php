@@ -30,7 +30,7 @@ class Validator
     public function __construct($schemaFile)
     {
         if (!file_exists($schemaFile)) {
-            throw new SchemaException('Schema file not found');
+            throw new SchemaException(sprintf('Schema file not found: [%s]', $schemaFile));
         }
         $data = file_get_contents($schemaFile);
         $this->schema = json_decode($data);
@@ -48,7 +48,7 @@ class Validator
      * @param mixed $entity
      * @param string $entityName
      * 
-     * @return JsonValidator
+     * @return Validator
      */
     public function validate($entity, $entityName = null)
     {
@@ -67,11 +67,15 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator
+     * @return Validator
      */
     protected function validateProperties($entity, $schema, $entityName)
     {
         $properties = get_object_vars($entity);
+        
+        if (!isset($schema->properties)) {
+            throw new SchemaException(sprintf('No properties defined for [%s]', $entityName));
+        }
         
         // Check defined properties
         foreach($schema->properties as $propertyName => $property) {
@@ -105,7 +109,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator
+     * @return Validator
      */
     protected function validateType($entity, $schema, $entityName)
     {
@@ -140,15 +144,15 @@ class Validator
                         $valid = true;
                     }
                     break;
-                case 'number':
-                    if (is_numeric($entity)) {
-                        $this->checkTypeNumber($entity, $schema, $entityName);
-                        $valid = true;
-                    }
-                    break;
                 case 'integer':
                     if (is_int($entity)) {
                         $this->checkTypeInteger($entity, $schema, $entityName);
+                        $valid = true;
+                    }
+                    break;
+                case 'number':
+                    if (is_numeric($entity)) {
+                        $this->checkTypeNumber($entity, $schema, $entityName);
                         $valid = true;
                     }
                     break;
@@ -164,8 +168,11 @@ class Validator
                         $valid = true;
                     }
                     break;
-                default:
                 case 'any':
+                    $this->checkTypeAny($entity, $schema, $entityName);
+                    $valid = true;
+                    break;
+                default:
                     // Do nothing
                     $valid = true;
                     break;
@@ -187,7 +194,7 @@ class Validator
      * @param object $schema
      * @param string $entityName 
      * 
-     * @return JsonValidator
+     * @return Validator
      */
     protected function checkTypeObject($entity, $schema, $entityName) 
     {
@@ -203,7 +210,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkTypeNumber($entity, $schema, $entityName)
     {
@@ -213,6 +220,7 @@ class Validator
         $this->checkExclusiveMaximum($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
+        $this->checkDisallow($entity, $schema, $entityName);
         
         return $this;
     }
@@ -224,7 +232,7 @@ class Validator
      * @param object $schema
      * @param string $entityName 
      * 
-     * @return JsonValidator
+     * @return Validator
      */
     protected function checkTypeInteger($entity, $schema, $entityName)
     {
@@ -234,6 +242,7 @@ class Validator
         $this->checkExclusiveMaximum($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
+        $this->checkDisallow($entity, $schema, $entityName);
         
         return $this;
     }
@@ -245,7 +254,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkTypeBoolean($entity, $schema, $entityName)
     {
@@ -259,7 +268,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator
+     * @return Validator
      */
     protected function checkTypeString($entity, $schema, $entityName)
     {
@@ -268,6 +277,7 @@ class Validator
         $this->checkMaxLength($entity, $schema, $entityName);
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
+        $this->checkDisallow($entity, $schema, $entityName);
         
         return $this;
     }
@@ -279,7 +289,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkTypeArray($entity, $schema, $entityName)
     {
@@ -287,6 +297,8 @@ class Validator
         $this->checkMaxItems($entity, $schema, $entityName);
         $this->checkUniqueItems($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
+        $this->checkItems($entity, $schema, $entityName);
+        $this->checkDisallow($entity, $schema, $entityName);
         
         return $this;
     }
@@ -298,10 +310,26 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkTypeNull($entity, $schema, $entityName)
     {
+        return $this;
+    }
+    
+    /**
+     * Check any type
+     * 
+     * @param mixed $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return Validator 
+     */
+    protected function checkTypeAny($entity, $schema, $entityName)
+    {
+        $this->checkDisallow($entity, $schema, $entityName);
+        
         return $this;
     }
     
@@ -312,7 +340,7 @@ class Validator
      * @param object $schema
      * @param string $entityName 
      * 
-     * @return JsonValidator
+     * @return Validator
      */
     protected function checkMinimum($entity, $schema, $entityName)
     {
@@ -332,7 +360,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkMaximum($entity, $schema, $entityName)
     {
@@ -390,7 +418,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkPattern($entity, $schema, $entityName)
     {
@@ -410,7 +438,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkMinLength($entity, $schema, $entityName)
     {
@@ -430,7 +458,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkMaxLength($entity, $schema, $entityName)
     {
@@ -450,7 +478,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkMinItems($entity, $schema, $entityName)
     {
@@ -470,7 +498,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkMaxItems($entity, $schema, $entityName)
     {
@@ -490,7 +518,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkUniqueItems($entity, $schema, $entityName)
     {
@@ -510,7 +538,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     protected function checkEnum($entity, $schema, $entityName)
     {
@@ -546,7 +574,7 @@ class Validator
      * @param object $schema
      * @param string $entityName
      * 
-     * @return JsonValidator 
+     * @return Validator 
      */
     public function checkFormat($entity, $schema, $entityName)
     {
@@ -603,6 +631,95 @@ class Validator
                 throw new ValidationException(sprintf('Value for [%s] must match format [%s]', $entityName, $schema->format));
             }
         }
+        return $this;
+    }
+    
+    /**
+     * Check items restriction
+     * 
+     * @param array $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return Validator 
+     */
+    protected function checkItems($entity, $schema, $entityName)
+    {
+        if (isset($schema->items) && $schema->items) {
+            // Item restriction is an array of schemas
+            if (is_array($schema->items)) {
+                foreach($entity as $index => $node) {
+                    $nodeEntityName = $entityName . '[' . $index . ']';
+                    
+                    // Check if the item passes any of the item validations
+                    foreach($schema->items as $item) {
+                        $nodeValid = true;
+                        try {
+                            $this->validateType($node, $item, $nodeEntityName);
+                            // Pass
+                            break;
+                        } catch (ValidationException $e) {
+                            $nodeValid = false;
+                        }
+                    }
+                    
+                    // If item did not pass any item validations
+                    if (!$nodeValid) {
+                        $allowedTypes = array_map(function($item){
+                            return $item->type == 'object' ? 'object (schema)' : $item->type;
+                        }, $schema->items);
+                        throw new ValidationException(sprintf('Invalid value for [%s], must be one of the following types: [%s]', 
+                            $nodeEntityName, implode(', ' , $allowedTypes)));
+                    }
+                }
+            // Item restriction is a single schema
+            } else if (is_object($schema->items)) {
+                foreach($entity as $index => $node) {
+                    $nodeEntityName = $entityName . '[' . $index . ']';
+                    $this->validateType($node, $schema->items, $nodeEntityName);
+                }
+                
+            } else {
+                throw new SchemaException(sprintf('Invalid items value for [%s]', $entityName));
+            }
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Check disallowed entity type
+     * 
+     * @param mixed $entity
+     * @param object $schema
+     * @param string $entityName 
+     * 
+     * @return Validator
+     */
+    protected function checkDisallow($entity, $schema, $entityName)
+    {
+        if (isset($schema->disallow) && $schema->disallow) {
+            $thisSchema = clone $schema;
+            $thisSchema->type = $schema->disallow;
+            unset($thisSchema->disallow);
+            
+            // We are expecting an exception - if one is not thrown,
+            // then we have a matching disallowed type
+            try {
+                $valid = false;
+                $this->validateType($entity, $thisSchema, $entityName);
+            } catch (ValidationException $e) {
+                $valid = true;
+            }
+            if (!$valid) {
+                $disallowedTypes = array_map(function($item){
+                    return is_object($item) ? 'object (schema)' : $item;
+                }, is_array($schema->disallow) ? $schema->disallow : array($schema->disallow));
+                throw new ValidationException(sprintf('Invalid value for [%s], disallowed types are [%s]', 
+                    $entityName, implode(', ', $disallowedTypes)));
+            }
+        }
+        
         return $this;
     }
 }

@@ -1,0 +1,9 @@
+{
+    "type" : "object",
+    "properties" : {
+        "foo" : {
+            "type" : "array",
+            "items" : "string"
+        }
+    }
+}
