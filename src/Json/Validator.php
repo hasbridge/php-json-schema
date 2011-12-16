@@ -221,6 +221,7 @@ class Validator
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
         $this->checkDisallow($entity, $schema, $entityName);
+        $this->checkDivisibleBy($entity, $schema, $entityName);
         
         return $this;
     }
@@ -243,6 +244,7 @@ class Validator
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
         $this->checkDisallow($entity, $schema, $entityName);
+        $this->checkDivisibleBy($entity, $schema, $entityName);
         
         return $this;
     }
@@ -717,6 +719,30 @@ class Validator
                 }, is_array($schema->disallow) ? $schema->disallow : array($schema->disallow));
                 throw new ValidationException(sprintf('Invalid value for [%s], disallowed types are [%s]', 
                     $entityName, implode(', ', $disallowedTypes)));
+            }
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Check divisibleby restriction
+     * 
+     * @param int|float $entity
+     * @param object $schema
+     * @param string $entityName
+     * 
+     * @return Validator 
+     */
+    protected function checkDivisibleBy($entity, $schema, $entityName)
+    {
+        if (isset($schema->divisibleBy) && $schema->divisibleBy) {
+            if (!is_numeric($schema->divisibleBy)) {
+                throw new SchemaException(sprintf('Invalid divisibleBy value for [%s], must be numeric', $entityName));
+            }
+            
+            if ($entity % $schema->divisibleBy != 0) {
+                throw new ValidationException(sprintf('Invalid value for [%s], must be divisible by [%d]', $entityName, $schema->divisibleBy));
             }
         }
         

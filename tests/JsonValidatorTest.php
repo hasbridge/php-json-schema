@@ -545,4 +545,34 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         
         $v->validate($o);
     }
+    
+    public function testDivisibleBy()
+    {
+        $v = $this->getValidator('divisibleBy.json');
+        $o = 8;
+        
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\ValidationException
+     */
+    public function testInvalidDivisibleBy()
+    {
+        $v = $this->getValidator('divisibleBy.json');
+        $o = 3;
+        
+        $v->validate($o);
+    }
+    
+    /**
+     * @expectedException Json\SchemaException
+     */
+    public function testInvalidDivisibleByValue()
+    {
+        $v = $this->getValidator('invalid-divisibleBy.json');
+        $o = 3;
+        
+        $v->validate($o);
+    }
 }
