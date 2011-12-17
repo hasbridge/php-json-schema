@@ -288,7 +288,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         $v->validate(1);
     }
     
-    public function textExclusiveMaximum()
+    public function testExclusiveMaximum()
     {
         $v = $this->getValidator('exclusiveMaximum.json');
         $v->validate(1);

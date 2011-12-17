@@ -1,0 +1,5 @@
+{
+    "type" : "integer",
+    "maximum" : 2,
+    "exclusiveMaximum" : true
+}
