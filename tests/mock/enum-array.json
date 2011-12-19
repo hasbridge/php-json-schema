@@ -1,4 +1,4 @@
 {
-    "type" : "string",
+    "type" : "array",
     "enum" : ["foo", "bar"]
 }

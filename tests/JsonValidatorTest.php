@@ -47,12 +47,8 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      * 
      * @return JsonValidator 
      */
-    protected function getValidator($schemaFile = null)
+    protected function getValidator($schemaFile)
     {
-        if (!$schemaFile) {
-            $schemaFile = 'test.json';
-        }
-        
         return new Validator(TEST_DIR . '/mock/' . $schemaFile);
     }
 
@@ -105,7 +101,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testMultiProp()
     {
-        $v = $this->getValidator('multitype.json');
+        $v = $this->getValidator('type/multitype.json');
         $v->validate("asdf");
         $v->validate(1234);
     }
@@ -136,7 +132,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
     
     public function testString()
     {
-        $v = $this->getValidator('string.json');
+        $v = $this->getValidator('type/string.json');
         $v->validate('foo');
     }
     
@@ -145,13 +141,13 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidString()
     {
-        $v = $this->getValidator('string.json');
+        $v = $this->getValidator('type/string.json');
         $v->validate(1234);
     }
     
     public function testNumber()
     {
-        $v = $this->getValidator('number.json');
+        $v = $this->getValidator('type/number.json');
         $v->validate(1);
         $v->validate(1.1);
     }
@@ -161,13 +157,13 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidNumber()
     {
-        $v = $this->getValidator('number.json');
+        $v = $this->getValidator('type/number.json');
         $v->validate('asdf');
     }
     
     public function testInteger()
     {
-        $v = $this->getValidator('integer.json');
+        $v = $this->getValidator('type/integer.json');
         $v->validate(1);
     }
     
@@ -176,13 +172,13 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidInteger()
     {
-        $v = $this->getValidator('integer.json');
+        $v = $this->getValidator('type/integer.json');
         $v->validate('asdf');
     }
     
     public function testBoolean()
     {
-        $v = $this->getValidator('boolean.json');
+        $v = $this->getValidator('type/boolean.json');
         $v->validate(true);
         $v->validate(false);
     }
@@ -192,13 +188,13 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidBoolean()
     {
-        $v = $this->getValidator('boolean.json');
+        $v = $this->getValidator('type/boolean.json');
         $v->validate('asdf');
     }
     
     public function testArray()
     {
-        $v = $this->getValidator('array.json');
+        $v = $this->getValidator('type/array.json');
         $v->validate(array(1, 2, 3));
         $v->validate(array());
     }
@@ -208,13 +204,13 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidArray()
     {
-        $v = $this->getValidator('array.json');
+        $v = $this->getValidator('type/array.json');
         $v->validate('asdf');
     }
     
     public function testNull()
     {
-        $v = $this->getValidator('null.json');
+        $v = $this->getValidator('type/null.json');
         $v->validate(null);
     }
     
@@ -223,13 +219,13 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidNull()
     {
-        $v = $this->getValidator('null.json');
+        $v = $this->getValidator('type/null.json');
         $v->validate(1234);
     }
     
     public function testObject()
     {
-        $v = $this->getValidator('object.json');
+        $v = $this->getValidator('type/object.json');
         $o = new stdClass();
         $v->validate($o);
     }
@@ -239,7 +235,7 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidObject()
     {
-        $v = $this->getValidator('object.json');
+        $v = $this->getValidator('type/object.json');
         $v->validate('asdf');
     }
     
@@ -303,14 +299,27 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         $v->validate(2);
     }
     
+    public function testPattern()
+    {
+        $v = $this->getValidator('pattern.json');
+        $o = "ASDF";
+        $v->validate($o);
+    }
+    
     /**
      * @expectedException Json\ValidationException
      */
     public function testInvalidPattern()
     {
-        $o = $this->getTestObject();
-        $o->stringProp = "1234";
-        $v = $this->getValidator();
+        $v = $this->getValidator('pattern.json');
+        $o = "asdf";
+        $v->validate($o);
+    }
+    
+    public function testMinLength()
+    {
+        $v = $this->getValidator('minLength.json');
+        $o = "foo";
         $v->validate($o);
     }
     
@@ -319,9 +328,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidMinLength()
     {
-        $o = $this->getTestObject();
-        $o->stringProp = "a";
-        $v = $this->getValidator();
+        $v = $this->getValidator('minLength.json');
+        $o = "a";
+        $v->validate($o);
+    }
+    
+    public function testMaxLength()
+    {
+        $v = $this->getValidator('maxLength.json');
+        $o = "foo";
         $v->validate($o);
     }
     
@@ -330,9 +345,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidMaxLength()
     {
-        $o = $this->getTestObject();
-        $o->stringProp = "abcd";
-        $v = $this->getValidator();
+        $v = $this->getValidator('maxLength.json');
+        $o = "foo bar";
+        $v->validate($o);
+    }
+    
+    public function testMinItems()
+    {
+        $v = $this->getValidator('minItems.json');
+        $o = array('foo', 'bar');
         $v->validate($o);
     }
     
@@ -341,9 +362,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidMinItems()
     {
-        $o = $this->getTestObject();
-        $o->arrayProp = array();
-        $v = $this->getValidator();
+        $v = $this->getValidator('minItems.json');
+        $o = array('foo');
+        $v->validate($o);
+    }
+    
+    public function testMaxItems()
+    {
+        $v = $this->getValidator('maxItems.json');
+        $o = array('foo', 'bar');
         $v->validate($o);
     }
     
@@ -352,9 +379,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidMaxItems()
     {
-        $o = $this->getTestObject();
-        $o->arrayProp = array('a', 'b', 'c', 'd');
-        $v = $this->getValidator();
+        $v = $this->getValidator('maxItems.json');
+        $o = array('foo', 'bar', 'baz');
+        $v->validate($o);
+    }
+    
+    public function testUniqueItems()
+    {
+        $v = $this->getValidator('uniqueItems.json');
+        $o = array('foo', 'bar');
         $v->validate($o);
     }
     
@@ -363,58 +396,67 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidUniqueItems()
     {
-        $o = $this->getTestObject();
-        $o->arrayProp = array('a', 'a');
-        $v = $this->getValidator();
+        $v = $this->getValidator('uniqueItems.json');
+        $o = array('foo', 'foo');
+        $v->validate($o);
+    }
+    
+    public function testEnumArray()
+    {
+        $v = $this->getValidator('enum-array.json');
+        $o = array('foo', 'bar');
         $v->validate($o);
     }
     
     /**
      * @expectedException Json\ValidationException
      */
-    public function testInvalidArrayEnum()
+    public function testInvalidEnumArray()
     {
-        $o = $this->getTestObject();
-        $o->arrayProp = array('foo', 'blah');
-        $v = $this->getValidator();
+        $v = $this->getValidator('enum-array.json');
+        $o = array('foo', 'baz');
+        $v->validate($o);
+    }
+    
+    public function testEnumString()
+    {
+        $v = $this->getValidator('enum-string.json');
+        $o = 'foo';
         $v->validate($o);
     }
     
     /**
      * @expectedException Json\ValidationException
      */
-    public function testInvalidStringEnum()
+    public function testInvalidEnumString()
     {
-        $v =  new Validator(TEST_DIR . '/mock/enum-string.json');
-        $o = (object)array(
-            'foo' => 'Bar2'
-        );
-        
+        $v = $this->getValidator('enum-string.json');
+        $o = 'baz';
         $v->validate($o);
     }
     
-    /**
-     * @expectedException Json\SchemaException
-     */
-    public function testInvalidEnum()
+    public function testFormatDateTime()
     {
-        $v =  new Validator(TEST_DIR . '/mock/invalid-enum.json');
-        $o = (object)array(
-            'foo' => 'Bar'
-        );
-        
+        $v = $this->getValidator('format/date-time.json');
+        $o = "2011-01-01T12:00:00Z";
         $v->validate($o);
     }
-
+    
     /**
      * @expectedException Json\ValidationException
      */
     public function testInvalidFormatDateTime()
     {
-        $o = $this->getTestObject();
-        $o->dateTimeFormatProp = 'asdf';
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('format/date-time.json');
+        $o = "asdf";
+        $v->validate($o); 
+    }
+    
+    public function testFormatDate()
+    {
+        $v = $this->getValidator('format/date.json');
+        $o = "2011-01-01";
+        $v->validate($o); 
     }
     
     /**
@@ -422,10 +464,16 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidFormatDate()
     {
-        $o = $this->getTestObject();
-        $o->dateFormatProp = 'asdf';
-        $v = $this->getValidator();
-        $v->validate($o);
+        $v = $this->getValidator('format/date.json');
+        $o = "asdf";
+        $v->validate($o); 
+    }
+    
+    public function testFormatTime()
+    {
+        $v = $this->getValidator('format/time.json');
+        $o = "12:00:00";
+        $v->validate($o); 
     }
     
     /**
@@ -433,9 +481,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidFormatTime()
     {
-        $o = $this->getTestObject();
-        $o->timeFormatProp = 'asdf';
-        $v = $this->getValidator();
+        $v = $this->getValidator('format/time.json');
+        $o = "asdf";
+        $v->validate($o); 
+    }
+    
+    public function testFormatUtcMillisec()
+    {
+        $v = $this->getValidator('format/utc-millisec.json');
+        $o = 12345;
         $v->validate($o);
     }
     
@@ -444,9 +498,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidFormatUtcMillisec()
     {
-        $o = $this->getTestObject();
-        $o->utcMillisecFormatProp = -100;
-        $v = $this->getValidator();
+        $v = $this->getValidator('format/utc-millisec.json');
+        $o = -100;
+        $v->validate($o);
+    }
+    
+    public function testFormatColor()
+    {
+        $v = $this->getValidator('format/color.json');
+        $o = "#CCC";
         $v->validate($o);
     }
     
@@ -455,9 +515,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidFormatColor()
     {
-        $o = $this->getTestObject();
-        $o->colorFormatProp = 'asdf';
-        $v = $this->getValidator();
+        $v = $this->getValidator('format/color.json');
+        $o = "CCC";
+        $v->validate($o);
+    }
+    
+    public function testFormatStyle()
+    {
+        $v = $this->getValidator('format/style.json');
+        $o = "background: transparent #FFF url('/path/too/image.jpg') no-repeat 5px 10px;";
         $v->validate($o);
     }
     
@@ -466,9 +532,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidFormatStyle()
     {
-        $o = $this->getTestObject();
-        $o->styleFormatProp = 'asdf';
-        $v = $this->getValidator();
+        $v = $this->getValidator('format/style.json');
+        $o = "asdf";
+        $v->validate($o);
+    }
+    
+    public function testFormatPhone()
+    {
+        $v = $this->getValidator('format/phone.json');
+        $o = "555-555-1234";
         $v->validate($o);
     }
     
@@ -477,9 +549,15 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidFormatPhone()
     {
-        $o = $this->getTestObject();
-        $o->phoneFormatProp = 'asdf';
-        $v = $this->getValidator();
+        $v = $this->getValidator('format/phone.json');
+        $o = "foo";
+        $v->validate($o);
+    }
+    
+    public function testFormatUri()
+    {
+        $v = $this->getValidator('format/uri.json');
+        $o = "http://www.example.org/page.php?a=foo&b=%20bar";
         $v->validate($o);
     }
     
@@ -488,9 +566,8 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidFormatUri()
     {
-        $o = $this->getTestObject();
-        $o->uriFormatProp = '@*<>';
-        $v = $this->getValidator();
+        $v = $this->getValidator('format/uri.json');
+        $o = "@^";
         $v->validate($o);
     }
     
