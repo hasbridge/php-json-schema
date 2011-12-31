@@ -72,6 +72,7 @@ class Validator
     protected function validateProperties($entity, $schema, $entityName)
     {
         $properties = get_object_vars($entity);
+        $checkedProperties = array();
         
         if (!isset($schema->properties)) {
             throw new SchemaException(sprintf('No properties defined for [%s]', $entityName));
@@ -83,6 +84,8 @@ class Validator
                 // Check type
                 $path = $entityName . '.' . $propertyName;
                 $this->validateType($entity->{$propertyName}, $property, $path);
+                // add this property to the list of checked properties 
+                array_push($checkedProperties, $propertyName);
             } else {
                 // Check required
                 if (isset($property->required) && $property->required) {
@@ -91,11 +94,39 @@ class Validator
             }
         }
         
+        // check properties whose keys match pattern
+        foreach($schema->patternProperties as $pattern => $property) {
+            // walk through each of the properties to see if it matches this pattern
+            foreach ($properties as $propertyName) {
+                if (preg_match($pattern, $propertyName)) {
+                    // Check type
+                    $path = $entityName . '.' . $propertyName;
+                    $this->validateType($entity->{$propertyName}, $property, $path);
+                    // add this property to the list of checked properties 
+                    array_push($checkedProperties, $propertyName);
+                } else {
+                    // Check required
+                    if (isset($property->required) && $property->required) {
+                        throw new ValidationException(sprintf('Missing required patternProperty [%s] for [%s]', $propertyName, $entityName));
+                    }
+                }
+            }
+        }
+        
         // Check additional properties
-        if (isset($schema->additionalProperties) && !$schema->additionalProperties) {
-            $extra = array_diff(array_keys((array)$entity), array_keys((array)$schema->properties));
-            if (count($extra)) {
-                throw new ValidationException(sprintf('Additional properties [%s] not allowed for property [%s]', implode(',', $extra), $entityName));
+        if (isset($schema->additionalProperties)) {
+            // are there any extra that haven't been checked?
+            $extra = array_diff($properties, $checkedProperties);
+            if (!$schema->additionalProperties) {
+                if (count($extra)) {
+                    throw new ValidationException(sprintf('Additional properties [%s] not allowed for property [%s]', implode(',', $extra), $entityName));
+                }
+            } else if (is_object($schema->additionalProperties)) {
+                // validate each extra property against the additionalProperties schema
+                foreach ($extra as $propertyName) {
+                    $path = $entityName . '.' . $propertyName;
+                    $this->validateType($entity->{$propertyName}, $property, $path);
+                }
             }
         }
         
