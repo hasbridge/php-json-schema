@@ -71,11 +71,11 @@ class Validator
      */
     public function checkFormat($entity, $schema, $entityName)
     {
-        if (!isset($schema->format) && $schema->format) {
+        if (!isset($schema->format)) {
             return $this;
         }
 
-            $valid = true;
+        $valid = true;
         switch ($schema->format) {
             case 'date-time':
                 if (!preg_match('#^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$#', $entity)) {
