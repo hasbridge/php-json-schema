@@ -1,0 +1,19 @@
+{
+    "name": "hasbridge/json-schema-validator",
+    "type": "library",
+    "description": "PHP 5.3 implementation of json schema validation",
+    "keywords": ["json", "schema"],
+    "license": "MIT",
+    "authors": [{
+        "name": "Harold Asbridge",
+        "email": "hasbridge@gmail.com"
+    }],
+    "require": {
+        "php": ">=5.3.2"
+    },
+    "autoload": {
+        "psr-0": {
+            "Json": "src/"
+        }
+    }
+}
