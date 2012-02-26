@@ -68,9 +68,6 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         $v = new Validator(TEST_DIR . '/mock/empty.json');
     }
     
-    /**
-     * @expectedException Json\SchemaException
-     */
     public function testMissingProperties()
     {
         $v = $this->getValidator('missing-properties.json');
@@ -82,9 +79,6 @@ class JsonValidatorTest extends PHPUnit_Framework_TestCase
         $v->validate($o);
     }
     
-    /**
-     * @expectedException Json\ValidationException
-     */
     public function testMissingType()
     {
         $v = new Validator(TEST_DIR . '/mock/missing-type.json');
