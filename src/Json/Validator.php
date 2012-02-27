@@ -144,7 +144,8 @@ class Validator
         $properties = get_object_vars($entity);
 
         if (!isset($schema->properties)) {
-            throw new SchemaException(sprintf('No properties defined for [%s]', $entityName));
+        	return $this;
+            //throw new SchemaException(sprintf('No properties defined for [%s]', $entityName));
         }
 
         // Check defined properties
@@ -183,11 +184,13 @@ class Validator
      */
     protected function validateType($entity, $schema, $entityName)
     {
-        if (!isset($schema->type)) {
-            throw new ValidationException(sprintf('No type given for [%s]', $entityName));
+        if (isset($schema->type)) {
+	        $types = $schema->type;
+		} else {
+			$types = 'any';
+            //throw new ValidationException(sprintf('No type given for [%s]', $entityName));
         }
 
-        $types = $schema->type;
         if (!is_array($types)) {
             $types = array($types);
         }
