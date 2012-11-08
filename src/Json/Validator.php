@@ -500,7 +500,7 @@ class Validator
     protected function checkPattern($entity, $schema, $entityName)
     {
         if (isset($schema->pattern) && $schema->pattern) {
-            if (!preg_match($schema->pattern, $entity)) {
+            if (!preg_match('/' . $schema->pattern . '/', $entity)) {
                 throw new ValidationException(sprintf('String does not match pattern for [%s]', $entityName));
             }
         }
