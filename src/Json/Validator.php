@@ -218,19 +218,19 @@ class Validator
                     }
                     break;
                 case 'integer':
-                    if (is_int($entity)) {
+                    if (!is_string($entity) && is_int($entity)) {
                         $this->checkTypeInteger($entity, $schema, $entityName);
                         $valid = true;
                     }
                     break;
                 case 'number':
-                    if (is_numeric($entity)) {
+                    if (!is_string($entity) && is_numeric($entity)) {
                         $this->checkTypeNumber($entity, $schema, $entityName);
                         $valid = true;
                     }
                     break;
                 case 'boolean':
-                    if (is_bool($entity)) {
+                    if (!is_string($entity) && is_bool($entity)) {
                         $this->checkTypeBoolean($entity, $schema, $entityName);
                         $valid = true;
                     }
