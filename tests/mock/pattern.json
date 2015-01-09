@@ -1,4 +1,4 @@
 {
     "type" : "string",
-    "pattern" : "/^[A-Z]+$/"
+    "pattern" : "^[A-Z]+$"
 }
