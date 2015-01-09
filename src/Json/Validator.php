@@ -419,7 +419,7 @@ class Validator
      */
     protected function checkMinimum($entity, $schema, $entityName)
     {
-        if (isset($schema->minimum) && $schema->minimum) {
+        if (isset($schema->minimum)) {
             if ($entity < $schema->minimum) {
                 throw new ValidationException(sprintf('Invalid value for [%s], minimum is [%s]', $entityName, $schema->minimum));
             }
@@ -439,7 +439,7 @@ class Validator
      */
     protected function checkMaximum($entity, $schema, $entityName)
     {
-        if (isset($schema->maximum) && $schema->maximum) {
+        if (isset($schema->maximum)) {
             if ($entity > $schema->maximum) {
                 throw new ValidationException(sprintf('Invalid value for [%s], maximum is [%s]', $entityName, $schema->maximum));
             }
