@@ -7,13 +7,27 @@ draft can be found at http://tools.ietf.org/html/draft-zyp-json-schema-03
 
 ## Usage
 
-    $someJson = '{"foo":"bar"}';
-    $jsonObject = json_decode($someJson);
-    
-    $validator = new JsonValidator('/path/to/yourschema.json');
-    
-    $validator->validate($jsonObject);
+The standard way to use the JSON Validator is by passing in the location on your server to the
+JSON schema and validating against it, like so:
 
+```php
+$someJson = '{"foo":"bar"}';
+$jsonObject = json_decode($someJson);
+
+$validator = new Validator('/path/to/yourschema.json');
+$validator->validate($jsonObject);
+```
+
+Alternatively you can pass in the raw JSON schema directly to the constructor:
+
+```php
+$myRawJsonSchema = "{...}";
+$someJson = '{"foo":"bar"}';
+$jsonObject = json_decode($someJson);
+
+$validator = new Validator($myRawJsonSchema, "json");
+$validator->validate($jsonObject);
+```
 
 ## Supported Types
 

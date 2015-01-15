@@ -25,16 +25,22 @@ class Validator
     /**
      * Initialize validation object
      *
-     * @param string $schemaFile
+     * @param string $schema
+     * @param string $content "file", if the first param passed is a file location; "json" if it's raw JSON content
+     * @throws SchemaException
      */
-    public function __construct($schemaFile)
+    public function __construct($schema, $content = "file")
     {
-        if (!file_exists($schemaFile)) {
-            throw new SchemaException(sprintf('Schema file not found: [%s]', $schemaFile));
+        if ($content === "file") {
+            if (!file_exists($schema)) {
+                throw new SchemaException(sprintf('Schema file not found: [%s]', $schema));
+            }
+            $data = file_get_contents($schema);
+        } else if ($content === "json") {
+            $data = $schema;
         }
-        $data = file_get_contents($schemaFile);
-        $this->schema = json_decode($data);
 
+        $this->schema = json_decode($data);
         if ($this->schema === null) {
             throw new SchemaException('Unable to parse JSON data - syntax error?');
         }
