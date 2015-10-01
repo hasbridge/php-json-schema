@@ -2,9 +2,6 @@
 
 namespace Json;
 
-class ValidationException extends \Exception {};
-class SchemaException extends \Exception {};
-
 /**
  * JSON Schema Validator
  *
