@@ -2,18 +2,12 @@
 
 namespace Json;
 
-class ValidationException extends \Exception {};
-class SchemaException extends \Exception {};
-
 /**
  * JSON Schema Validator
  *
  * Implements schema draft version 03, as defined at http://json-schema.org
- *
- * @author Harold Asbridge <hasbridge@gmail.com>
- * @version 0.1
  */
-class Validator
+class JsonSchemaValidator
 {
     protected $schemaDefinition;
 
@@ -30,13 +24,13 @@ class Validator
     public function __construct($schemaFile)
     {
         if (!file_exists($schemaFile)) {
-            throw new SchemaException(sprintf('Schema file not found: [%s]', $schemaFile));
+            throw new \Exception(sprintf('Schema file not found: [%s]', $schemaFile));
         }
         $data = file_get_contents($schemaFile);
         $this->schema = json_decode($data);
 
         if ($this->schema === null) {
-            throw new SchemaException('Unable to parse JSON data - syntax error?');
+            throw new \Exception('Unable to parse JSON data - syntax error?');
         }
 
         // @TODO - validate schema itself
@@ -45,7 +39,7 @@ class Validator
     /**
      * Validate schema object
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param string $entityName
      *
      * @return Validator
@@ -63,7 +57,7 @@ class Validator
     /**
      * Check format restriction
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -88,7 +82,7 @@ class Validator
                 }
                 break;
             case 'time':
-                if (!preg_match('#^\d{2}:\d{2}:\d{2}$#', $entity)) {
+                if (!preg_match('#^\d{2}:\d{2}:\d{2}$#', $entity) && !preg_match('#^\d{2}:\d{2}$#', $entity)) {
                     $valid = false;
                 }
                 break;
@@ -124,7 +118,7 @@ class Validator
         }
 
         if (!$valid) {
-            throw new ValidationException(sprintf('Value for [%s] must match format [%s]', $entityName, $schema->format));
+            throw new \Exception(sprintf('Value for [%s] must match format [%s]', $entityName, $schema->format));
         }
 
         return $this;
@@ -144,12 +138,12 @@ class Validator
         $properties = get_object_vars($entity);
 
         if (!isset($schema->properties)) {
-        	return $this;
-            //throw new SchemaException(sprintf('No properties defined for [%s]', $entityName));
+            return $this;
+            //throw new \Exception(sprintf('No properties defined for [%s]', $entityName));
         }
 
         // Check defined properties
-        foreach($schema->properties as $propertyName => $property) {
+        foreach ($schema->properties as $propertyName => $property) {
             if (array_key_exists($propertyName, $properties)) {
                 // Check type
                 $path = $entityName . '.' . $propertyName;
@@ -157,16 +151,16 @@ class Validator
             } else {
                 // Check required
                 if (isset($property->required) && $property->required) {
-                    throw new ValidationException(sprintf('Missing required property [%s] for [%s]', $propertyName, $entityName));
+                    throw new \Exception(sprintf('Missing required property [%s] for [%s]', $propertyName, $entityName));
                 }
             }
         }
 
         // Check additional properties
         if (isset($schema->additionalProperties) && !$schema->additionalProperties) {
-            $extra = array_diff(array_keys((array)$entity), array_keys((array)$schema->properties));
+            $extra = array_diff(array_keys((array) $entity), array_keys((array) $schema->properties));
             if (count($extra)) {
-                throw new ValidationException(sprintf('Additional properties [%s] not allowed for property [%s]', implode(',', $extra), $entityName));
+                throw new \Exception(sprintf('Additional properties [%s] not allowed for property [%s]', implode(',', $extra), $entityName));
             }
         }
 
@@ -176,7 +170,7 @@ class Validator
     /**
      * Validate entity type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -185,10 +179,9 @@ class Validator
     protected function validateType($entity, $schema, $entityName)
     {
         if (isset($schema->type)) {
-	        $types = $schema->type;
-		} else {
-			$types = 'any';
-            //throw new ValidationException(sprintf('No type given for [%s]', $entityName));
+            $types = $schema->type;
+        } else {
+            $types = 'any';
         }
 
         if (!is_array($types)) {
@@ -207,7 +200,9 @@ class Validator
                     break;
                 case 'string':
                     if (is_string($entity)) {
-                        $this->checkTypeString($entity, $schema, $entityName);
+                        if (!empty($entity)) {
+                            $this->checkTypeString($entity, $schema, $entityName);
+                        }
                         $valid = true;
                     }
                     break;
@@ -253,7 +248,7 @@ class Validator
         }
 
         if (!$valid) {
-            throw new ValidationException(sprintf('Property [%s] must be one of the following types: [%s]', $entityName, implode(', ', $types)));
+            throw new \Exception(sprintf('Property [%s] must be one of the following types: [%s]', $entityName, implode(', ', $types)));
         }
 
         return $this;
@@ -263,7 +258,7 @@ class Validator
     /**
      * Check object type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -279,7 +274,7 @@ class Validator
     /**
      * Check number type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -302,7 +297,7 @@ class Validator
     /**
      * Check integer type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -325,7 +320,7 @@ class Validator
     /**
      * Check boolean type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -339,7 +334,7 @@ class Validator
     /**
      * Check string type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -353,6 +348,33 @@ class Validator
         $this->checkFormat($entity, $schema, $entityName);
         $this->checkEnum($entity, $schema, $entityName);
         $this->checkDisallow($entity, $schema, $entityName);
+        if (isset($schema->format) && $schema->format==='time' && isset($schema->rangeCheck) && $schema->rangeCheck) {
+            $this->checkTimeRange($entity, $schema, $entityName);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Check format restriction
+     *
+     * @param mixed  $entity
+     * @param object $schema
+     * @param string $entityName
+     *
+     * @return Validator
+     */
+    protected function checkTimeRange($entity, $schema, $entityName)
+    {
+        if (isset($schema->minimum) && isset($schema->maximum)) {
+            $entity= substr($entity, 0, 2);
+            $entity =(int) $entity;
+            if ($entity < $schema->minimum) {
+                throw new \Exception(sprintf('Invalid value for [%s], minimum is [%s]', $entityName, $schema->minimum));
+            } else if ($entity > $schema->maximum) {
+                throw new \Exception(sprintf('Invalid value for [%s], maximum is [%s]', $entityName, $schema->maximum));
+            }
+        }
 
         return $this;
     }
@@ -360,7 +382,7 @@ class Validator
     /**
      * Check array type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -381,7 +403,7 @@ class Validator
     /**
      * Check null type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -395,7 +417,7 @@ class Validator
     /**
      * Check any type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -411,7 +433,7 @@ class Validator
     /**
      * Check minimum value
      *
-     * @param int|float $entity
+     * @param int    $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -421,7 +443,7 @@ class Validator
     {
         if (isset($schema->minimum)) {
             if ($entity < $schema->minimum) {
-                throw new ValidationException(sprintf('Invalid value for [%s], minimum is [%s]', $entityName, $schema->minimum));
+                throw new \Exception(sprintf('Invalid value for [%s], minimum is [%s]', $entityName, $schema->minimum));
             }
         }
 
@@ -431,7 +453,7 @@ class Validator
     /**
      * Check maximum value
      *
-     * @param int|float $entity
+     * @param int    $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -441,7 +463,7 @@ class Validator
     {
         if (isset($schema->maximum)) {
             if ($entity > $schema->maximum) {
-                throw new ValidationException(sprintf('Invalid value for [%s], maximum is [%s]', $entityName, $schema->maximum));
+                throw new \Exception(sprintf('Invalid value for [%s], maximum is [%s]', $entityName, $schema->maximum));
             }
         }
 
@@ -451,7 +473,7 @@ class Validator
     /**
      * Check exlusive minimum requirement
      *
-     * @param int|float $entity
+     * @param int    $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -461,7 +483,7 @@ class Validator
     {
         if (isset($schema->minimum) && isset($schema->exclusiveMinimum) && $schema->exclusiveMinimum) {
             if ($entity == $schema->minimum) {
-                throw new ValidationException(sprintf('Invalid value for [%s], must be greater than [%s]', $entityName, $schema->minimum));
+                throw new \Exception(sprintf('Invalid value for [%s], must be greater than [%s]', $entityName, $schema->minimum));
             }
         }
 
@@ -471,7 +493,7 @@ class Validator
     /**
      * Check exclusive maximum requirement
      *
-     * @param int|float $entity
+     * @param int    $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -481,7 +503,7 @@ class Validator
     {
         if (isset($schema->maximum) && isset($schema->exclusiveMaximum) && $schema->exclusiveMaximum) {
             if ($entity == $schema->maximum) {
-                throw new ValidationException(sprintf('Invalid value for [%s], must be less than [%s]', $entityName, $schema->maximum));
+                throw new \Exception(sprintf('Invalid value for [%s], must be less than [%s]', $entityName, $schema->maximum));
             }
         }
 
@@ -501,7 +523,7 @@ class Validator
     {
         if (isset($schema->pattern) && $schema->pattern) {
             if (!preg_match($schema->pattern, $entity)) {
-                throw new ValidationException(sprintf('String does not match pattern for [%s]', $entityName));
+                throw new \Exception(sprintf('String does not match pattern for [%s]', $entityName));
             }
         }
 
@@ -521,7 +543,7 @@ class Validator
     {
         if (isset($schema->minLength) && $schema->minLength) {
             if (strlen($entity) < $schema->minLength) {
-                throw new ValidationException(sprintf('String too short for [%s], minimum length is [%s]', $entityName, $schema->minLength));
+                throw new \Exception(sprintf('String too short for [%s], minimum length is [%s]', $entityName, $schema->minLength));
             }
         }
 
@@ -541,7 +563,7 @@ class Validator
     {
         if (isset($schema->maxLength) && $schema->maxLength) {
             if (strlen($entity) > $schema->maxLength) {
-                throw new ValidationException(sprintf('String too long for [%s], maximum length is [%s]', $entityName, $schema->maxLength));
+                throw new \Exception(sprintf('String too long for [%s], maximum length is [%s]', $entityName, $schema->maxLength));
             }
         }
 
@@ -551,7 +573,7 @@ class Validator
     /**
      * Check array minimum items
      *
-     * @param array $entity
+     * @param array  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -561,7 +583,7 @@ class Validator
     {
         if (isset($schema->minItems) && $schema->minItems) {
             if (count($entity) < $schema->minItems) {
-                throw new ValidationException(sprintf('Not enough array items for [%s], minimum is [%s]', $entityName, $schema->minItems));
+                throw new \Exception(sprintf('Not enough array items for [%s], minimum is [%s]', $entityName, $schema->minItems));
             }
         }
 
@@ -571,7 +593,7 @@ class Validator
     /**
      * Check array maximum items
      *
-     * @param array $entity
+     * @param array  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -581,7 +603,7 @@ class Validator
     {
         if (isset($schema->maxItems) && $schema->maxItems) {
             if (count($entity) > $schema->maxItems) {
-                throw new ValidationException(sprintf('Too many array items for [%s], maximum is [%s]', $entityName, $schema->maxItems));
+                throw new \Exception(sprintf('Too many array items for [%s], maximum is [%s]', $entityName, $schema->maxItems));
             }
         }
 
@@ -591,7 +613,7 @@ class Validator
     /**
      * Check array unique items
      *
-     * @param array $entity
+     * @param array  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -601,7 +623,7 @@ class Validator
     {
         if (isset($schema->uniqueItems) && $schema->uniqueItems) {
             if (count(array_unique($entity)) != count($entity)) {
-                throw new ValidationException(sprintf('All items in array [%s] must be unique', $entityName));
+                throw new \Exception(sprintf('All items in array [%s] must be unique', $entityName));
             }
         }
 
@@ -611,7 +633,7 @@ class Validator
     /**
      * Check enum restriction
      *
-     * @param array $entity
+     * @param array  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -622,7 +644,7 @@ class Validator
         $valid = true;
         if (isset($schema->enum) && $schema->enum) {
             if (!is_array($schema->enum)) {
-                throw new SchemaException(sprintf('Enum property must be an array for [%s]', $entityName));
+                throw new \Exception(sprintf('Enum property must be an array for [%s]', $entityName));
             }
             if (is_array($entity)) {
                 foreach ($entity as $val) {
@@ -638,7 +660,7 @@ class Validator
         }
 
         if (!$valid) {
-            throw new ValidationException(sprintf('Invalid value(s) for [%s], allowable values are [%s]', $entityName, implode(',', $schema->enum)));
+            throw new \Exception(sprintf('Invalid value(s) for [%s], allowable values are [%s]', $entityName, implode(',', $schema->enum)));
         }
 
         return $this;
@@ -647,7 +669,7 @@ class Validator
     /**
      * Check items restriction
      *
-     * @param array $entity
+     * @param array  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -658,17 +680,17 @@ class Validator
         if (isset($schema->items) && $schema->items) {
             // Item restriction is an array of schemas
             if (is_array($schema->items)) {
-                foreach($entity as $index => $node) {
+                foreach ($entity as $index => $node) {
                     $nodeEntityName = $entityName . '[' . $index . ']';
 
                     // Check if the item passes any of the item validations
-                    foreach($schema->items as $item) {
+                    foreach ($schema->items as $item) {
                         $nodeValid = true;
                         try {
                             $this->validateType($node, $item, $nodeEntityName);
                             // Pass
                             break;
-                        } catch (ValidationException $e) {
+                        } catch (\Exception $e) {
                             $nodeValid = false;
                         }
                     }
@@ -678,19 +700,19 @@ class Validator
                         $allowedTypes = array_map(function($item){
                             return $item->type == 'object' ? 'object (schema)' : $item->type;
                         }, $schema->items);
-                        throw new ValidationException(sprintf('Invalid value for [%s], must be one of the following types: [%s]',
-                            $nodeEntityName, implode(', ' , $allowedTypes)));
+                        throw new \Exception(sprintf('Invalid value for [%s], must be one of the following types: [%s]',
+                            $nodeEntityName, implode(', ', $allowedTypes)));
                     }
                 }
             // Item restriction is a single schema
             } else if (is_object($schema->items)) {
-                foreach($entity as $index => $node) {
+                foreach ($entity as $index => $node) {
                     $nodeEntityName = $entityName . '[' . $index . ']';
                     $this->validateType($node, $schema->items, $nodeEntityName);
                 }
 
             } else {
-                throw new SchemaException(sprintf('Invalid items value for [%s]', $entityName));
+                throw new \Exception(sprintf('Invalid items value for [%s]', $entityName));
             }
         }
 
@@ -700,7 +722,7 @@ class Validator
     /**
      * Check disallowed entity type
      *
-     * @param mixed $entity
+     * @param mixed  $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -713,19 +735,19 @@ class Validator
             $thisSchema->type = $schema->disallow;
             unset($thisSchema->disallow);
 
-            // We are expecting an exception - if one is not thrown,
+            // We are expecting an \Exception - if one is not thrown,
             // then we have a matching disallowed type
             try {
                 $valid = false;
                 $this->validateType($entity, $thisSchema, $entityName);
-            } catch (ValidationException $e) {
+            } catch (\Exception $e) {
                 $valid = true;
             }
             if (!$valid) {
                 $disallowedTypes = array_map(function($item){
                     return is_object($item) ? 'object (schema)' : $item;
                 }, is_array($schema->disallow) ? $schema->disallow : array($schema->disallow));
-                throw new ValidationException(sprintf('Invalid value for [%s], disallowed types are [%s]',
+                throw new \Exception(sprintf('Invalid value for [%s], disallowed types are [%s]',
                     $entityName, implode(', ', $disallowedTypes)));
             }
         }
@@ -736,7 +758,7 @@ class Validator
     /**
      * Check divisibleby restriction
      *
-     * @param int|float $entity
+     * @param int    $entity
      * @param object $schema
      * @param string $entityName
      *
@@ -746,11 +768,11 @@ class Validator
     {
         if (isset($schema->divisibleBy) && $schema->divisibleBy) {
             if (!is_numeric($schema->divisibleBy)) {
-                throw new SchemaException(sprintf('Invalid divisibleBy value for [%s], must be numeric', $entityName));
+                throw new \Exception(sprintf('Invalid divisibleBy value for [%s], must be numeric', $entityName));
             }
 
             if ($entity % $schema->divisibleBy != 0) {
-                throw new ValidationException(sprintf('Invalid value for [%s], must be divisible by [%d]', $entityName, $schema->divisibleBy));
+                throw new \Exception(sprintf('Invalid value for [%s], must be divisible by [%d]', $entityName, $schema->divisibleBy));
             }
         }
 
