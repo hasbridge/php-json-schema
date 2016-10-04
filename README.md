@@ -1,4 +1,4 @@
-This library provides JSON schema validation using the schema found at http://json-schema.org. 
+This library provides JSON schema validation using the schema found at http://json-schema.org.
 Note that it is not yet feature complete, but does support basic validation. The JSON schema
 draft can be found at http://tools.ietf.org/html/draft-zyp-json-schema-03
 
@@ -7,11 +7,13 @@ draft can be found at http://tools.ietf.org/html/draft-zyp-json-schema-03
 
 ## Usage
 
+    use Json\Validator as JsonValidator;
+
     $someJson = '{"foo":"bar"}';
     $jsonObject = json_decode($someJson);
-    
+
     $validator = new JsonValidator('/path/to/yourschema.json');
-    
+
     $validator->validate($jsonObject);
 
 
